@@ -1,0 +1,18 @@
+name: voxlens-stt
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pytorch
+  - torchvision
+  - torchaudio
+  - transformers
+  - librosa
+  - numpy
+  - scipy
+  - flask
+  - pytest
+  - jupyter
+  - pandas
+  - openai-whisper
