@@ -1,4 +1,6 @@
 import whisper
+import torch
+import torchaudio
 
 class WhisperModel:
     def __init__(self, hyperparameters):
@@ -27,9 +29,17 @@ class WhisperModel:
             temp_path = "/tmp/audio_file.wav"
             audio_input.save(temp_path)
             audio_input = temp_path
-            
+
+        if isinstance(audio_input, torch.Tensor):
+            # Resample to 16kHz and convert to mono
+            sample_rate = 16000
+            if audio_input.dim() > 1:  # Convert to mono if stereo
+                audio_input = torch.mean(audio_input, dim=0, keepdim=True)
+            audio_input = torchaudio.transforms.Resample(orig_freq=audio_input.size(1), new_freq=sample_rate)(audio_input)
+            audio_input = audio_input.squeeze().numpy()
+
         result = self.model.transcribe(audio_input)
-        return result["text"]
+        return result['text']
 
     def tune_hyperparameters(self, new_hyperparameters):
         # Update hyperparameters and reload model if necessary
