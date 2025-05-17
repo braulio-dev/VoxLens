@@ -21,4 +21,4 @@ def transcribe(audio_filepath):
     result = pipe(audio_filepath)
     return result["text"]
 
-print(transcribe("/content/drive/MyDrive/test.wav"))
+print(transcribe("./model/test/test2.wav"))

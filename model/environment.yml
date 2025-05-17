@@ -1,7 +1,8 @@
 name: voxlens-stt
 channels:
-  - defaults
   - conda-forge
+  - defaults
+  - pytorch
 dependencies:
   - python=3.11
   - pytorch
@@ -15,4 +16,7 @@ dependencies:
   - pytest
   - jupyter
   - pandas
-  - openai-whisper
+  - ffmpeg
+  - pip
+  - pip:
+      - whisper
