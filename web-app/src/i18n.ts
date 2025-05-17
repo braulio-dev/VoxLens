@@ -14,7 +14,12 @@ const messages = {
         result: 'Results',
         error: 'An error occurred during processing.',
         summary: 'Summary',
-        transcription: 'Full Transcription'
+        transcription: 'Full Transcription',
+        dropzone: 'Drag & drop audio file here',
+        dropzoneActive: 'Drop to process',
+        or: 'or',
+        upload: 'Upload Audio',
+        uploadSubtext: 'Supports MP3, WAV, M4A, FLAC, OGG'
       },
       theme: {
         light: 'Light',
@@ -39,7 +44,12 @@ const messages = {
         result: 'Resultados',
         error: 'Ocurrió un error durante el procesamiento.',
         summary: 'Resumen',
-        transcription: 'Transcripción Completa'
+        transcription: 'Transcripción Completa',
+        dropzone: 'Arrastra y suelta un archivo de audio aquí',
+        dropzoneActive: 'Suelta para procesar',
+        or: 'o',
+        upload: 'Subir Audio',
+        uploadSubtext: 'Soporta MP3, WAV, M4A, FLAC, OGG'
       },
       theme: {
         light: 'Claro',

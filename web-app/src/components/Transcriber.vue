@@ -5,29 +5,57 @@
     </h2>
     
     <div class="transcriber-container">
-      <div class="audio-controls">
-        <button
-          :disabled="recording || loading"
-          @click="startRecording"
-          v-if="!recording"
-          class="btn-record"
-          :class="{ 'pulse': !recording && !loading }"
+      <div class="controls-container">
+        <div class="audio-controls">
+          <button
+            :disabled="recording || loading"
+            @click="startRecording"
+            v-if="!recording"
+            class="btn-record"
+            :class="{ 'pulse': !recording && !loading }"
+          >
+            <MicrophoneIcon class="icon" />
+            <span>{{ $t('app.transcriber.record', 'Record Audio') }}</span>
+            <span class="btn-glow"></span>
+          </button>
+          
+          <button
+            :disabled="!recording"
+            @click="stopRecording"
+            v-if="recording"
+            class="btn-stop"
+          >
+            <StopIcon class="icon" />
+            <span>{{ $t('app.transcriber.stop', 'Stop Recording') }}</span>
+            <span class="btn-glow"></span>
+          </button>
+        </div>
+      
+        <div 
+          class="dropzone"
+          :class="{ 'active': isDragging }"
+          @dragover.prevent="handleDragOver"
+          @dragleave.prevent="handleDragLeave"
+          @drop.prevent="handleDrop"
+          @click="triggerFileUpload"
         >
-          <MicrophoneIcon class="icon" />
-          <span>{{ $t('app.transcriber.record', 'Record Audio') }}</span>
-          <span class="btn-glow"></span>
-        </button>
-        
-        <button
-          :disabled="!recording"
-          @click="stopRecording"
-          v-if="recording"
-          class="btn-stop"
-        >
-          <StopIcon class="icon" />
-          <span>{{ $t('app.transcriber.stop', 'Stop Recording') }}</span>
-          <span class="btn-glow"></span>
-        </button>
+          <ArrowUpTrayIcon class="icon-upload" />
+          <p class="dropzone-text">
+            {{ isDragging ? $t('app.transcriber.dropzoneActive', 'Drop to process') : $t('app.transcriber.dropzone', 'Drag & drop audio file here') }}
+          </p>
+          <p class="dropzone-or">{{ $t('app.transcriber.or', 'or') }}</p>
+          <button class="btn-upload">
+            {{ $t('app.transcriber.upload', 'Upload Audio') }}
+          </button>
+          <p class="dropzone-subtext">{{ $t('app.transcriber.uploadSubtext', 'Supports MP3, WAV, M4A, FLAC, OGG') }}</p>
+          <input 
+            ref="fileInput"
+            type="file" 
+            accept="audio/*" 
+            class="file-input" 
+            @change="handleFileSelect"
+          />
+        </div>
       </div>
       
       <div class="status-indicator">
@@ -74,7 +102,8 @@ import {
   MicrophoneIcon, 
   StopIcon, 
   ExclamationCircleIcon,
-  ClipboardDocumentIcon
+  ClipboardDocumentIcon,
+  ArrowUpTrayIcon
 } from '@heroicons/vue/24/outline';
 
 const recording = ref(false);
@@ -82,6 +111,8 @@ const loading = ref(false);
 const transcription = ref('');
 const summary = ref('');
 const error = ref(false);
+const isDragging = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
 let mediaRecorder: MediaRecorder | null = null;
 let audioChunks: BlobPart[] = [];
 
@@ -96,7 +127,7 @@ function startRecording() {
       mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        sendAudio(audioBlob);
+        sendAudio(audioBlob, 'recording.webm');
       };
       mediaRecorder.start();
       recording.value = true;
@@ -113,14 +144,14 @@ function stopRecording() {
   }
 }
 
-async function sendAudio(blob: Blob) {
+async function sendAudio(blob: Blob, filename: string) {
   loading.value = true;
   error.value = false;
   transcription.value = '';
   summary.value = '';
   try {
     const formData = new FormData();
-    formData.append('file', blob, 'audio.webm');
+    formData.append('file', blob, filename);
     const response = await fetch('http://localhost:8000/summarize', {
       method: 'POST',
       body: formData,
@@ -138,6 +169,49 @@ async function sendAudio(blob: Blob) {
 function copyResult() {
   if (summary.value) {
     navigator.clipboard.writeText(summary.value);
+  }
+}
+
+function handleDragOver(e: DragEvent) {
+  e.preventDefault();
+  isDragging.value = true;
+}
+
+function handleDragLeave() {
+  isDragging.value = false;
+}
+
+function handleDrop(e: DragEvent) {
+  isDragging.value = false;
+  
+  if (!e.dataTransfer) return;
+  
+  const files = e.dataTransfer.files;
+  if (files.length > 0 && files[0].type.startsWith('audio/')) {
+    processFile(files[0]);
+  } else {
+    error.value = true;
+  }
+}
+
+function handleFileSelect(e: Event) {
+  const target = e.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    processFile(target.files[0]);
+  }
+}
+
+function processFile(file: File) {
+  if (file.type.startsWith('audio/')) {
+    sendAudio(file, file.name);
+  } else {
+    error.value = true;
+  }
+}
+
+function triggerFileUpload() {
+  if (fileInput.value) {
+    fileInput.value.click();
   }
 }
 </script>
@@ -185,6 +259,12 @@ function copyResult() {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .audio-controls {
@@ -246,6 +326,75 @@ function copyResult() {
   cursor: not-allowed;
   transform: none;
   box-shadow: var(--shadow-sm);
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border: 2px dashed rgba(var(--color-primary-rgb), 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(var(--color-primary-rgb), 0.03);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.dropzone:hover {
+  border-color: rgba(var(--color-primary-rgb), 0.7);
+  background: rgba(var(--color-primary-rgb), 0.05);
+}
+
+.dropzone.active {
+  border-color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.1);
+}
+
+.icon-upload {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+.dropzone-text {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.dropzone-or {
+  margin: 0.5rem 0;
+  color: var(--color-text-secondary);
+}
+
+.dropzone-subtext {
+  margin-top: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.btn-upload {
+  background: transparent;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.5);
+  color: var(--color-primary);
+  padding: 0.6rem 1.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-upload:hover {
+  background: rgba(var(--color-primary-rgb), 0.1);
+  transform: translateY(-2px);
+}
+
+.file-input {
+  display: none;
 }
 
 .icon {
