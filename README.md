@@ -1,4 +1,4 @@
-
+![imagen](https://github.com/user-attachments/assets/d5a9c751-2b16-4cb4-9e18-de15d2871a2e)
 
 # VoxLens 🎙️ Voice to Text Summarizer
 
@@ -7,8 +7,6 @@ VoxLens is a voice transcription and summarization tool that converts spoken aud
 ## About This Project
 
 VoxLens was developed as a final project for the Deep Learning course in the 6th semester at CETYS Universidad for Expo Ingeniería. Our team wanted to create a practical application of speech recognition and natural language processing that could be useful in everyday scenarios.
-
-We spent countless late nights training models, debugging API calls, and tweaking the UI - fueled by coffee and the occasional pizza. But honestly, seeing it all come together was worth every debugging session!
 
 ## Features
 
