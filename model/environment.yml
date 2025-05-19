@@ -17,6 +17,7 @@ dependencies:
   - jupyter
   - pandas
   - ffmpeg
+  - python-Levenshtein
   - pip
   - pip:
       - whisper
